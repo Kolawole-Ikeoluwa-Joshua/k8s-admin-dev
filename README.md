@@ -57,7 +57,7 @@ kubectl describe pod coredns-565d847f94-bnvjl -n kube-system
 kubectl version
 ```
 
-[Virtual Tutor](https://github.com/marcel-dempers)
+**Virtual Tutor:** [Marcel-Dempers](https://github.com/marcel-dempers)
 
 # Advanced Labs:
 
