@@ -57,8 +57,6 @@ kubectl describe pod coredns-565d847f94-bnvjl -n kube-system
 kubectl version
 ```
 
-Virtual Tutor: [Marcel-Dempers](https://github.com/marcel-dempers)
-
 # Advanced Labs:
 
 - [Kubernetes Deployments](deployments/readme.md)
@@ -74,3 +72,4 @@ Virtual Tutor: [Marcel-Dempers](https://github.com/marcel-dempers)
 - [Kubernetes & Helm](helm/README.md)
 - [Kubernetes RBAC](rbac/README.md)
 - [Kubernetes Monitoring](monitoring/1.23/README.md)
+- [Kubernetes & Continuous Deployments - FluxCD](fluxcd/README.md)
