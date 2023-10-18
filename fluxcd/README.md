@@ -139,11 +139,11 @@ cd fluxcd/repositories/example-app-1
 ls
 
 cd src
-docker build . -t example-app-1:0.0.1
+docker build . -t example-app-1:0.0.2
 
 #load the image to our test cluster so we dont need to push to a registry
 # pretend to be a CI server, since there is none setup in this demo
-kind load docker-image example-app-1:0.0.1 --name fluxcd
+kind load docker-image example-app-1:0.0.2 --name fluxcd
 ```
 
 ## setup our gitops pipeline
