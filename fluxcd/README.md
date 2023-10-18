@@ -94,6 +94,8 @@ git pull origin <branch-name>
 
 # Understanding GitOps Repository structures
 
+## 1. Automate deploy by automating a commit to your k8s infrastructure repo
+
 Generally, in GitOps you have a dedicated repo for infrastructure templates. </br>
 Your infrastructure will "sync" from this repo </br>
 
@@ -139,11 +141,11 @@ cd fluxcd/repositories/example-app-1
 ls
 
 cd src
-docker build . -t example-app-1:0.0.2
+docker build . -t example-app-1:0.0.1
 
 #load the image to our test cluster so we dont need to push to a registry
 # pretend to be a CI server, since there is none setup in this demo
-kind load docker-image example-app-1:0.0.2 --name fluxcd
+kind load docker-image example-app-1:0.0.1 --name fluxcd
 ```
 
 ## setup our gitops pipeline
@@ -161,6 +163,7 @@ kubectl -n default apply -f repositories/infra-repo/apps/example-app-1/kustomiza
 
 # check our flux resources
 kubectl -n default describe gitrepository example-app-1
+
 # make sure k8s manifests are already in repo
 kubectl -n default describe kustomization example-app-1
 
@@ -172,3 +175,142 @@ kubectl port-forward svc/example-app-1 80:80
 ```
 
 Now we have setup CD, let's take a look at CI </br>
+
+## changes to our example apps
+
+Once we make changes to our `app.py` we can build a new image with a new tag </br>
+
+```
+docker build . -t example-app-1:0.0.2
+
+#load the image to our test cluster so we dont need to push to a registry
+kind load docker-image example-app-1:0.0.2 --name fluxcd
+
+# update our kubernetes deployment YAML image tag
+# git commit with [skip ci] as the prefix of commit message & git push to branch!
+```
+
+If we wait a minute or so we can ` kubectl port-forward svc/example-app-1 80:80` again and see the changes
+
+## automate deploy by updating manifest
+
+So all we did to update our app is to build a new image, push it to our registry and update the image tag in our kubernetes deployment YAML file and `flux` will sync it. </br>
+This is generally the role of CI, where `flux` concern is mainly CD. </br>
+
+Here is an example on [how to automate that](https://fluxcd.io/flux/use-cases/gh-actions-manifest-generation/)
+
+## 2. Automate deploy by image scanning with Flux
+
+```
+                                              docker push
+
+        developer    +-----------+     +----------+       +-------------+
+                     |           |     | CI       |       |IMAGE        |
+         ----------> | REPO(code)|---> | PIPELINE | ----->|REGISTRY     |
+                     +-----------+     +----------+       +-------------+
+                                                           ^
+                                                           |sync
+                                                           |
+                                   +----------+  commit   +----------+
+                                   |INFRA     | <-------- |  INFRA   |
+                                   |REPO(yaml)|           |  (k8s)   |
+                                   +----------+           +----------+
+
+```
+
+An alternative method is to use your CI to build and push a newly tagged image to your registry (same as first option) and use [Flux image scanner](https://fluxcd.io/flux/guides/image-update/#configure-image-updates) to trigger the rollout instead of automating a commit to your k8s infrastructure repo. </br>
+
+We firstly need to enable image scanning as its not enabled by default. </br>
+To do this we just need to re-bootstrap `flux` with an addition flag
+
+```
+flux bootstrap github \
+  --token-auth \
+  --owner=Kolawole-Ikeoluwa-Joshua \
+  --repository=k8s-admin-dev \
+  --path=fluxcd/repositories/infra-repo/clusters/dev-cluster \
+  --components-extra=image-reflector-controller,image-automation-controller \
+  --personal \
+  --branch main
+```
+
+Check the source code that `flux bootstrap` created
+
+```
+git pull origin <branch-name>
+```
+
+We need to create a image registry credential where we will push our image:
+
+```
+kubectl -n default create secret docker-registry dockerhub-credential --docker-username '' --docker-password '' --docker-email 'test@test.com'
+```
+
+# build and push example-app-2
+
+```
+cd fluxcd\repositories\example-app-2\
+ls
+cd src
+ls
+docker build . -t <docker-username>/example-app-2:0.0.1
+docker push <docker-username>/example-app-2:0.0.1
+```
+
+We will need to tell Flux how to manage our image deployment </br>
+Note that this time our Kubernetes YAML is in the `infra-repo/apps/example-app-2/` repo. </br>
+This is because our application repo triggers it's CI which will build and push a new image to our cluster </br>
+Flux will then detect the new image tag and update our Kubernetes YAML in our infrastructure repo. </br>
+If Flux pushed the update to our application repo, it will cause a CI/CD loop.
+
+## add image policy and repository
+
+```
+# make sure k8s manifests are already in repo
+
+# we will also need to provide authentication for our git repo
+flux create secret git example-app-2-github --url https://github.com/Kolawole-Ikeoluwa-Joshua/k8s-admin-dev --username 'Kolawole-Ikeoluwa-Joshua' --password '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' --namespace default
+
+kubectl -n default delete gitrepository example-app-2
+kubectl -n default delete kustomization example-app-2
+kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/gitrepository.yaml
+kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/kustomization.yaml
+
+# see our application
+kubectl get deploy
+kubectl get pods
+
+# tell flux about our image update policy
+kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/imagerepository.yaml
+kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/imagepolicy.yaml
+kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/imageupdateautomation.yaml
+```
+
+There are a number of ways to authenticate with [GitRepositories](https://fluxcd.io/flux/components/source/gitrepositories/#secret-reference)
+
+```
+kubectl describe imagepolicy example-app-2
+kubectl describe  imagerepository example-app-2
+kubectl describe imageupdateautomation example-app-2
+```
+
+## Build and push our example-app-2
+
+```
+#make application changes and rebuild + push
+
+docker build . -t <docker-username>/example-app-2:0.0.2
+docker push <docker-username>/example-app-2:0.0.2
+
+#see changes new tags
+kubectl describe imagerepository
+
+#see image being updated
+kubectl describe imagepolicy example-app-2
+
+# see flux commiting back to the repo
+kubectl describe imageupdateautomation example-app-2
+
+docker build . -t kolawolejoshua/example-app-2:0.0.2
+docker push kolawolejoshua/example-app-2:0.0.2
+```
