@@ -269,10 +269,9 @@ If Flux pushed the update to our application repo, it will cause a CI/CD loop.
 # make sure k8s manifests are already in repo
 
 # we will also need to provide authentication for our git repo
-flux create secret git example-app-2-github --url https://github.com/Kolawole-Ikeoluwa-Joshua/k8s-admin-dev --username 'Kolawole-Ikeoluwa-Joshua' --password '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' --namespace default
+# You will use the github app's client ID as the username and the app's client secret as the password.
+flux create secret git example-app-2-github --url https://github.com/Kolawole-Ikeoluwa-Joshua/k8s-admin-dev --username '' --password '' --namespace default
 
-kubectl -n default delete gitrepository example-app-2
-kubectl -n default delete kustomization example-app-2
 kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/gitrepository.yaml
 kubectl -n default apply -f fluxcd/repositories/infra-repo/apps/example-app-2/kustomization.yaml
 
@@ -303,14 +302,11 @@ docker build . -t <docker-username>/example-app-2:0.0.2
 docker push <docker-username>/example-app-2:0.0.2
 
 #see changes new tags
-kubectl describe imagerepository
+kubectl describe  imagerepository example-app-2
 
 #see image being updated
 kubectl describe imagepolicy example-app-2
 
 # see flux commiting back to the repo
 kubectl describe imageupdateautomation example-app-2
-
-docker build . -t kolawolejoshua/example-app-2:0.0.2
-docker push kolawolejoshua/example-app-2:0.0.2
 ```
