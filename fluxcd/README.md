@@ -10,7 +10,8 @@ kind create cluster --name fluxcd --image kindest/node:v1.26.3
 
 ## Run a container to work in
 
-### run Alpine Linux: 
+### run Alpine Linux:
+
 ```
 docker run -it --rm -v ${HOME}:/root/ -v ${PWD}:/work -w /work --net host alpine sh
 ```
@@ -18,10 +19,10 @@ docker run -it --rm -v ${HOME}:/root/ -v ${PWD}:/work -w /work --net host alpine
 ### install some tools
 
 ```
-# install curl 
+# install curl
 apk add --no-cache curl
 
-# install kubectl 
+# install kubectl
 curl -sLO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 mv ./kubectl /usr/local/bin/kubectl
@@ -29,6 +30,7 @@ mv ./kubectl /usr/local/bin/kubectl
 ```
 
 ### test cluster access:
+
 ```
 /work # kubectl get nodes
 NAME                    STATUS   ROLES    AGE   VERSION
@@ -58,9 +60,9 @@ The [Core Concepts](https://fluxcd.io/flux/concepts/) is a good place to start. 
 
 We begin by following the steps under the [bootstrap](https://fluxcd.io/flux/installation/#bootstrap) section for GitHub </br>
 
-We'll need to generate a [personal access token (PAT)](https://github.com/settings/tokens/new) that can create repositories by checking all permissions under `repo`.  </br>
+We'll need to generate a [personal access token (PAT)](https://github.com/settings/tokens/new) that can create repositories by checking all permissions under `repo`. </br>
 
-Once we have a token, we can set it: 
+Once we have a token, we can set it:
 
 ```
 export GITHUB_TOKEN=<your-token>
@@ -84,36 +86,37 @@ kubectl -n flux-system get GitRepository
 kubectl -n flux-system get Kustomization
 ```
 
-Check the source code that `flux bootstrap` created 
+Check the source code that `flux bootstrap` created
 
 ```
 git pull origin <branch-name>
 ```
+
 # Understanding GitOps Repository structures
 
 Generally, in GitOps you have a dedicated repo for infrastructure templates. </br>
 Your infrastructure will "sync" from this repo </br>
 
 ```
-                                                    
- developer    +-----------+     +----------+           
-              |           |     | CI       |           
-  ----------> | REPO(code)|---> | PIPELINE |           
-              +-----------+     +----------+           
-                                         |  commit     
-                                         v             
-           +----------+ sync    +----------+           
-           |  INFRA   |-------> |INFRA     |           
-           |  (k8s)   |         |REPO(yaml)|           
-           +----------+         +----------+           
-                                                            
+
+ developer    +-----------+     +----------+
+              |           |     | CI       |
+  ----------> | REPO(code)|---> | PIPELINE |
+              +-----------+     +----------+
+                                         |  commit
+                                         v
+           +----------+ sync    +----------+
+           |  INFRA   |-------> |INFRA     |
+           |  (k8s)   |         |REPO(yaml)|
+           +----------+         +----------+
+
 ```
 
 Flux repository structure [documentation](https://fluxcd.io/flux/guides/repository-structure/)
 
-* Mono Repo (all k8s YAML in same "infra repo")
-* Repo per team
-* Repo per app 
+- Mono Repo (all k8s YAML in same "infra repo")
+- Repo per team
+- Repo per app
 
 Take note in this guide the folders under `fluxcd/repositories` represent different GIT repos
 
@@ -123,6 +126,7 @@ Take note in this guide the folders under `fluxcd/repositories` represent differ
   - example-app-1
   - example-app-2
 ```
+
 ## build our example apps
 
 Let's say we have a microservice called `example-app-1` and it has its own GitHub repo somewhere. </br>
@@ -135,12 +139,13 @@ cd fluxcd/repositories/example-app-1
 ls
 
 cd src
-docker build . -t example-app-1:0.0.0
+docker build . -t example-app-1:0.0.1
 
 #load the image to our test cluster so we dont need to push to a registry
 # pretend to be a CI server, since there is none setup in this demo
-kind load docker-image example-app-1:0.0.0 --name fluxcd 
+kind load docker-image example-app-1:0.0.1 --name fluxcd
 ```
+
 ## setup our gitops pipeline
 
 Now we will also have a "infra-repo" GitHub repo where infrastructure configuration files for GitOps live.
@@ -154,8 +159,9 @@ cd fluxcd
 kubectl -n default apply -f repositories/infra-repo/apps/example-app-1/gitrepository.yaml
 kubectl -n default apply -f repositories/infra-repo/apps/example-app-1/kustomization.yaml
 
-# check our flux resources 
+# check our flux resources
 kubectl -n default describe gitrepository example-app-1
+# make sure k8s manifests are already in repo
 kubectl -n default describe kustomization example-app-1
 
 # check deployed resources
