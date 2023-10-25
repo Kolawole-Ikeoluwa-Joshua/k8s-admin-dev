@@ -54,7 +54,7 @@ kubectl apply -n argocd -f ./argo/argo-cd/app.yaml
 
 Review Deployments on ArgoCD UI:
 
-![Initial Deployment](argo/docs-image/initial-deployment.png)
+![Initial Deployment](./docs-image/initial-deployment.png)
 
 4. Continuous Deployments
 
@@ -65,3 +65,7 @@ aimvector/python:1.0.1
 ```
 
 Push changes to GitOps Repository.
+
+Notice ArgoCD is taking down the old pods and deploying the revised version of our application
+
+![Continuous Deployment](./docs-image/continuous-deployment.png)
