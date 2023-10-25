@@ -45,3 +45,23 @@ password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="
 ```
 
 3. Deploy Applications
+
+Deploy IAC k8s manifests using the Argo CD deployment manifest `app.yaml`
+
+```
+kubectl apply -n argocd -f ./argo/argo-cd/app.yaml
+```
+
+Review Deployments on ArgoCD UI:
+
+![Initial Deployment](argo/docs-image/initial-deployment.png)
+
+4. Continuous Deployments
+
+Simulate an application upgrade by incrementing the docker image version in `example-app/deployment.yaml` manifest.
+
+```
+aimvector/python:1.0.1
+```
+
+Push changes to GitOps Repository.
