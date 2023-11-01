@@ -1,0 +1,6 @@
+*.pem
+*.csr
+# terraform
+.terraform
+*.tfstate
+*.tfstate.*
