@@ -74,3 +74,4 @@ kubectl version
 - [Kubernetes Monitoring](monitoring/1.23/README.md)
 - [Kubernetes & Continuous Deployments - FluxCD](fluxcd/README.md)
 - [Kubernetes & Continuous Deployments - ArgoCD](argo/argo-cd/README.md)
+- [Kubernetes Secret Management- Vault](hashicorp/readme.md)
