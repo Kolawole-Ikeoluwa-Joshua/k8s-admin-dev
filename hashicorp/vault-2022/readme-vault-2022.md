@@ -6,14 +6,14 @@ Requirements:
 * Kind or Minikube
 
 For this tutorial, I will be using Kubernetes 1.21.
-If you are watching the old guide for Kubernetes 1.17, go [here](..\vault\readme.md)
+If you are watching the old guide for Kubernetes 1.17, go [here](../vault/readme-deprecated.md)
 
 Lets create a Kubernetes cluster to play with using [kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 ```
 cd hashicorp/vault-2022
 
-kind create cluster --name vault --image kindest/node:v1.21.1 --config kind.yaml
+kind create cluster --name vault --image kindest/node:v1.28.0 --config kind.yaml
 ```
 
 Next up, I will be running a small container where I will be doing all the work from:
@@ -26,19 +26,19 @@ docker run -it --rm --net host -v ${HOME}/.kube/:/root/.kube/ -v ${PWD}:/work -w
 Install `kubectl`
 
 ```
-apk add --no-cache curl
-curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-chmod +x ./kubectl
+apk add --no-cache curl && \
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
+chmod +x ./kubectl && \
 mv ./kubectl /usr/local/bin/kubectl
 ```
 
 Install `helm`
 
 ```
-curl -LO https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz
-tar -C /tmp/ -zxvf helm-v3.7.2-linux-amd64.tar.gz
-rm helm-v3.7.2-linux-amd64.tar.gz
-mv /tmp/linux-amd64/helm /usr/local/bin/helm
+curl -LO https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz && \
+tar -C /tmp/ -zxvf helm-v3.7.2-linux-amd64.tar.gz && \
+rm helm-v3.7.2-linux-amd64.tar.gz && \
+mv /tmp/linux-amd64/helm /usr/local/bin/helm && \
 chmod +x /usr/local/bin/helm
 ```
 
@@ -74,7 +74,7 @@ mkdir manifests
 
 helm template consul hashicorp/consul \
   --namespace vault \
-  --version 0.39.0 \
+  --version 1.0.0 \
   -f consul-values.yaml \
   > ./manifests/consul.yaml
 ```
@@ -83,6 +83,7 @@ Deploy the consul services:
 
 ```
 kubectl create ns vault
+
 kubectl -n vault apply -f ./manifests/consul.yaml
 kubectl -n vault get pods
 ```
@@ -115,7 +116,7 @@ Let's find what versions of vault are available:
 helm search repo hashicorp/vault --versions
 ```
 
-In this demo I will use the `0.19.0` chart </br>
+In this demo I will use the `0.25.0` chart </br>
 
 Let's firstly create a `values` file to customize vault.
 Let's grab the manifests:
@@ -123,7 +124,7 @@ Let's grab the manifests:
 ```
 helm template vault hashicorp/vault \
   --namespace vault \
-  --version 0.19.0 \
+  --version 0.25.0 \
   -f vault-values.yaml \
   > ./manifests/vault.yaml
 ```

@@ -17,7 +17,6 @@ kind create cluster --name vault --kubeconfig ~/.kube/kind-vault --image kindest
 
 ## TLS End to End Encryption
 
-VIDEO: `<Coming-Soon>`  
 See steps in [./tls/ssl_generate_self_signed.txt](./tls/ssl_generate_self_signed.txt)
 You'll need to generate TLS certs (or bring your own)
 Create base64 strings from the files, place it in the `server-tls-secret.yaml` and apply it.
@@ -27,8 +26,8 @@ Remember not to check-in your TLS to GIT :)
 
 ```
 kubectl create ns vault-example
-kubectl -n vault-example apply -f ./hashicorp/vault/server/
-kubectl -n vault-example get pods
+
+kubectl -n vault-example get podskubectl -n vault-example apply -f ./hashicorp/vault/server/
 ```
 
 ## Storage
@@ -52,7 +51,6 @@ kubectl -n vault-example get pods
 
 ## Deploy the Injector
 
-VIDEO: `<Coming-Soon>`  
 Injector allows pods to automatically get secrets from the vault.
 
 ```
